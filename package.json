@@ -1,0 +1,62 @@
+{
+  "name": "retoma",
+  "version": "1.3.0",
+  "description": "Retoma — nenhum cliente esquecido",
+  "main": "src/main.js",
+  "author": "Retoma",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder build --win --x64",
+    "test": "node test/rls.test.js && node test/sync.test.js && node test/auth.test.js",
+    "publicar": "node scripts/publicar.js"
+  },
+  "build": {
+    "appId": "br.com.retoma.app",
+    "productName": "Retoma",
+    "artifactName": "Retoma-Setup-${version}.${ext}",
+    "win": {
+      "target": "nsis",
+      "icon": "src/icon.ico",
+      "sign": null,
+      "signingHashAlgorithms": null
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "Retoma"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://configure-em-retoma.config.json/updateUrl"
+      }
+    ],
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": ".",
+        "to": ".",
+        "filter": [
+          "retoma.config.json"
+        ]
+      }
+    ]
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0",
+    "electron-updater": "6.3.9",
+    "ws": "^8.22.2"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.2.17",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  }
+}

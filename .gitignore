@@ -1,0 +1,16 @@
+# Dependências (recriadas com npm install)
+node_modules/
+
+# Instaladores gerados pelo npm run build
+dist/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+
+# Logs e segredos locais (a chave service_role NUNCA entra aqui)
+*.log
+.env
+.env.*

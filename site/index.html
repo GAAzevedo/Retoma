@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retoma — Nenhum cliente esquecido</title>
+<meta name="description" content="Lembrete de follow-up para quem vende pelo WhatsApp. Marque quando retomar cada cliente, veja o dinheiro em jogo e organize sua equipe. Sem risco de ban.">
+<meta property="og:title" content="Retoma — Nenhum cliente esquecido"><meta property="og:image" content="icon-512.png">
+<link rel="icon" href="icon-192.png"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav><div class="wrap"><img src="icon-192.png" alt=""><b>Retoma</b><a class="hide-m" href="#recursos">Recursos</a><a class="hide-m" href="#equipe">Equipe</a><a href="privacidade.html">Privacidade</a></div></nav>
+<header class="hero"><div class="wrap">
+  <img src="icon-512.png" alt="Logo do Retoma">
+  <h1>Nenhum cliente<br><span>esquecido.</span></h1>
+  <p>O lembrete de follow-up pra quem vende pelo WhatsApp. Marque quando retomar cada cliente, abra a conversa com 1 clique e veja quanto dinheiro está em jogo.</p>
+  <div class="cta"><a class="btn" id="dl" href="#" aria-disabled="true">⬇ Baixar pra Windows</a><a class="btn ghost" id="web" href="#" aria-disabled="true">📱 Usar no celular</a></div>
+  <div class="small">Grátis · Windows 10 e 11 · Funciona sem internet</div>
+</div></header>
+
+<section id="recursos"><div class="wrap">
+  <h2>Feito pra rotina de vendas</h2><p class="lead">Fica num cantinho da tela, sempre à vista, e não atrapalha o WhatsApp.</p>
+  <div class="grid">
+    <div class="card"><div class="ic">📅</div><h3>Retoma no dia certo</h3><p>Calendário, atrasados e faixa da semana. Adiar com 1 clique, sempre em dia útil.</p></div>
+    <div class="card"><div class="ic">💬</div><h3>WhatsApp em 1 clique</h3><p>Abre a conversa no WhatsApp Desktop, com mensagem pronta se quiser. Você confere e envia.</p></div>
+    <div class="card"><div class="ic">💰</div><h3>Dinheiro em jogo</h3><p>Lê o valor que você já escreve ("7,1 K", "R$ 2.500") e mostra quanto está parado nos atrasados.</p></div>
+    <div class="card"><div class="ic">🏪</div><h3>Vários negócios</h3><p>Cada um com sua cor, seu número e campos próprios, como m³ e tipo de peça.</p></div>
+    <div class="card"><div class="ic">☁️</div><h3>PC, notebook e celular</h3><p>Com uma conta grátis, tudo sincroniza. Sem internet, continua funcionando e sobe depois.</p></div>
+    <div class="card safe"><div class="ic">🛡️</div><h3>Sem risco de ban</h3><p>O Retoma nunca lê, envia nem automatiza nada no WhatsApp. É só um lembrete ao lado dele.</p></div>
+  </div>
+</div></section>
+
+<section id="equipe"><div class="wrap">
+  <h2>Pra lojas com equipe</h2><p class="lead">Ideal pra madeireiras e lojas de material: o cliente é da loja, não do vendedor.</p>
+  <div class="grid">
+    <div class="card"><div class="ic">👥</div><h3>Convite por código</h3><p>O dono gera um código de 6 letras e o vendedor entra na loja pelo app dele.</p></div>
+    <div class="card"><div class="ic">👀</div><h3>O gerente vê tudo</h3><p>Filtro por vendedor, placar do mês e atribuição de clientes. Cada vendedor vê só os seus.</p></div>
+    <div class="card"><div class="ic">🔁</div><h3>Ninguém leva a carteira</h3><p>Quem sai da loja deixa os clientes na carteira sem dono, e o gerente redistribui com 1 clique.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Comece em 1 minuto</h2>
+  <ol class="steps"><li><b>Baixe e instale</b> o Retoma no Windows.</li><li><b>Escolha o que você vende</b>: madeireira, serviços ou outro. Campos e mensagens já vêm prontos.</li><li><b>Marque seus clientes</b> e deixe o Retoma lembrar por você. As atualizações chegam sozinhas.</li></ol>
+  <div class="cta" style="margin-top:28px;justify-content:flex-start"><a class="btn" id="dl2" href="#" aria-disabled="true">⬇ Baixar grátis</a></div>
+</div></section>
+
+<footer><div class="wrap"><span>© <span id="y"></span> Retoma</span><span><a href="privacidade.html">Política de privacidade</a> · <a href="termos.html">Termos de uso</a> · <a id="mail" href="#">Contato</a></span></div></footer>
+<script src="config.js"></script>
+<script>
+const C = window.RETOMA_SITE || {}
+for (const id of ['dl', 'dl2']) if (C.downloadUrl) { const a = document.getElementById(id); a.href = C.downloadUrl; a.removeAttribute('aria-disabled') }
+if (C.webAppUrl) { const a = document.getElementById('web'); a.href = C.webAppUrl; a.removeAttribute('aria-disabled') }
+if (C.contato) document.getElementById('mail').href = 'mailto:' + C.contato
+document.getElementById('y').textContent = new Date().getFullYear()
+</script>
+</body>
+</html>

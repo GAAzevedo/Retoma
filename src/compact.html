@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green: #1db954; --acc-rgb: 29,185,84; --acc-light: #4ade80; --red: #e53935; --yellow: #f59e0b;
+  --surface: rgba(18,18,18,0.94); --border: rgba(255,255,255,0.08);
+  --text: #ffffff; --text2: rgba(255,255,255,0.45); --radius: 16px;
+}
+html, body { width: 100%; height: 100%; background: transparent; overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; user-select: none; }
+
+.card {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 76px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05) inset;
+  display: flex; align-items: center; padding: 0 12px 0 14px; gap: 10px; cursor: grab;
+}
+
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+  flex-shrink: 0; -webkit-app-region: no-drag; box-shadow: 0 0 6px var(--green);
+  transition: background 0.5s ease, box-shadow 0.5s ease; }
+.status-dot.zero { background: rgba(255,255,255,0.2); box-shadow: none; }
+
+.card-info { flex: 1; min-width: 0; }
+.card-top { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.card-title { font-size: 12.5px; font-weight: 600; color: var(--text); line-height: 1.2; transition: color 0.4s; white-space: nowrap;
+  min-width: 0; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; }
+.card-title.zero { color: var(--text2); }
+
+/* Nomes com bolinhas de prioridade */
+.card-names { font-size: 11px; color: var(--text2); margin-top: 3px;
+  white-space: nowrap; overflow: hidden; display: flex; align-items: center; gap: 4px;
+  -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.card-names .nm { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.prio-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.prio-dot.alta   { background: #e53935; box-shadow: 0 0 4px rgba(229,57,53,0.7); }
+.prio-dot.media  { background: #f59e0b; box-shadow: 0 0 4px rgba(245,158,11,0.7); }
+.prio-dot.baixa  { background: #1db954; box-shadow: 0 0 4px rgba(29,185,84,0.5); }
+
+.late-badge { display: none; background: var(--red); color: white; font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 20px; flex-shrink: 0; white-space: nowrap; -webkit-app-region: no-drag;
+  box-shadow: 0 2px 8px rgba(229,57,53,0.4); animation: pulse-red 2s infinite; cursor: pointer; }
+.late-badge.show { display: block; animation: pulse-red 2s infinite, badgeIn .45s cubic-bezier(0.34,1.56,0.64,1); }
+.late-badge:hover { filter: brightness(1.15); }
+@keyframes badgeIn { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes pulse-red { 0%,100% { box-shadow: 0 2px 8px rgba(229,57,53,0.4); } 50% { box-shadow: 0 2px 16px rgba(229,57,53,0.7); } }
+
+.card-btns { display: flex; gap: 5px; flex-shrink: 0; -webkit-app-region: no-drag; }
+.c-btn { width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  transition: background 0.25s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+.c-btn:hover { background: rgba(255,255,255,0.16); color: var(--text); transform: scale(1.1); }
+.c-btn:active { transform: scale(0.92); }
+.c-btn.add { background: var(--green); color: #000; font-size: 22px; font-weight: 300; box-shadow: 0 2px 12px rgba(var(--acc-rgb),0.4); }
+.c-btn.add:hover { background: #22d160; box-shadow: 0 4px 20px rgba(var(--acc-rgb),0.6); }
+.c-btn.add.active { background: var(--red); color: white; font-size: 18px; box-shadow: 0 2px 12px rgba(229,57,53,0.4); }
+
+.form-panel { position: absolute; bottom: 84px; left: 0; right: 0;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7); padding: 18px 16px 16px;
+  opacity: 0; transform: translateY(16px) scale(0.97); pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+.form-panel { max-height: calc(100vh - 96px); overflow-y: auto; scrollbar-width: none; }
+.form-panel::-webkit-scrollbar { display: none; }
+.cf-opts { display: flex; flex-wrap: wrap; gap: 5px; }
+.cf-opt { padding: 6px 9px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+  color: var(--text2); font-size: 11px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .2s; }
+.cf-opt:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+.cf-opt.on { border-color: rgba(var(--acc-rgb),.75); color: var(--acc-light); background: rgba(var(--acc-rgb),.22); box-shadow: 0 0 0 1px rgba(var(--acc-rgb),.4) inset; }
+.s-cf { color: rgba(255,255,255,.75); }
+.form-panel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+
+.form-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+
+.field { margin-bottom: 10px; }
+.field label { display: block; font-size: 9px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+.field input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px;
+  font-size: 12px; font-family: inherit; background: rgba(255,255,255,0.06); color: var(--text); outline: none;
+  transition: border-color 0.35s, background 0.35s, box-shadow 0.35s; }
+.field input::placeholder { color: rgba(255,255,255,0.18); }
+.field input:focus { border-color: var(--green); background: rgba(var(--acc-rgb),0.06); box-shadow: 0 0 0 3px rgba(var(--acc-rgb),0.12); }
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* PRIORIDADE */
+.prio-group { display: flex; gap: 6px; }
+.prio-btn { flex: 1; padding: 7px 4px; border-radius: 8px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05); color: var(--text2); font-size: 11px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all 0.2s; text-align: center; }
+.prio-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.prio-btn.sel-alta  { background: rgba(229,57,53,0.2); border-color: #e53935; color: #ff6b6b; }
+.prio-btn.sel-media { background: rgba(245,158,11,0.2); border-color: #f59e0b; color: #fbbf24; }
+.prio-btn.sel-baixa { background: rgba(29,185,84,0.2); border-color: #1db954; color: #4ade80; }
+
+.form-actions { display: flex; gap: 8px; margin-top: 12px; -webkit-app-region: no-drag; }
+.btn-cancel { padding: 9px 14px; background: rgba(255,255,255,0.06); color: var(--text2);
+  border: 1px solid var(--border); border-radius: 10px; font-size: 12px; cursor: pointer;
+  font-family: inherit; transition: background 0.25s, color 0.25s; }
+.btn-cancel:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+.btn-save { flex: 1; padding: 9px; background: var(--green); color: #000; border: none;
+  border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: background 0.25s, transform 0.15s, box-shadow 0.25s; box-shadow: 0 2px 12px rgba(var(--acc-rgb),0.35); }
+.btn-save:hover { background: #22d160; box-shadow: 0 4px 20px rgba(var(--acc-rgb),0.5); }
+.btn-save:active { transform: scale(0.97); }
+
+/* botão de encolher (aparece ao passar o mouse no card) */
+.mini-btn { position: absolute; top: -9px; right: 12px; height: 18px; padding: 0 8px;
+  display: flex; align-items: center; gap: 4px; border-radius: 9px; cursor: pointer;
+  background: #2a2a2a; border: 1px solid rgba(255,255,255,0.14); color: rgba(255,255,255,0.75);
+  font-size: 10px; font-weight: 600; font-family: inherit; -webkit-app-region: no-drag;
+  opacity: 0; transform: translateY(4px); pointer-events: none;
+  transition: opacity .25s, transform .25s cubic-bezier(0.16,1,0.3,1), background .2s, color .2s; }
+.card:hover .mini-btn { opacity: 1; transform: none; pointer-events: all; }
+.mini-btn:hover { background: #333; color: #fff; }
+
+.c-btn.search.active { background: rgba(var(--acc-rgb),0.22); color: var(--acc-light); box-shadow: 0 0 0 1px rgba(var(--acc-rgb),0.5) inset; }
+
+/* painel de busca */
+.search-panel { position: absolute; bottom: 84px; left: 0; right: 0; max-height: 400px;
+  display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7); padding: 12px;
+  opacity: 0; transform: translateY(16px) scale(0.97); pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+.search-panel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+.s-input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px;
+  font-size: 12px; font-family: inherit; background: rgba(255,255,255,0.06); color: var(--text); outline: none;
+  transition: border-color .3s, background .3s, box-shadow .3s; }
+.s-input::placeholder { color: rgba(255,255,255,0.25); }
+.s-input:focus { border-color: var(--green); background: rgba(var(--acc-rgb),0.06); box-shadow: 0 0 0 3px rgba(var(--acc-rgb),0.12); }
+.s-label { font-size: 9px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; margin: 10px 2px 6px; }
+.s-list { overflow-y: auto; flex: 1; min-height: 0; margin: 0 -4px; padding: 0 4px; }
+.s-list::-webkit-scrollbar { width: 4px; }
+.s-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 2px; }
+.s-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; margin-bottom: 5px;
+  border: 1px solid var(--border); border-radius: 11px; background: rgba(255,255,255,0.03);
+  animation: itemIn .35s cubic-bezier(0.16,1,0.3,1) both; transition: border-color .2s, background .2s, opacity .3s, transform .3s; }
+.s-item:hover { border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.05); }
+.s-item.late { border-color: rgba(229,57,53,.28); background: rgba(229,57,53,.08); }
+.s-item.leaving { opacity: 0; transform: translateX(20px); }
+@keyframes itemIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.s-info { flex: 1; min-width: 0; }
+.s-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
+.s-meta { font-size: 10.5px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-meta .late-txt { color: #ff6b6b; font-weight: 600; }
+.s-acts { display: flex; gap: 4px; flex-shrink: 0; }
+.s-btn { width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--border); cursor: pointer;
+  background: rgba(255,255,255,0.06); color: rgba(255,255,255,.7); font-size: 11px;
+  display: flex; align-items: center; justify-content: center; transition: background .2s, color .2s, transform .15s; }
+.s-btn:hover { background: rgba(255,255,255,.14); color: #fff; transform: scale(1.08); }
+.s-btn.wpp { background: rgba(var(--acc-rgb),.14); border-color: rgba(var(--acc-rgb),.25); color: var(--acc-light); }
+.s-btn.wpp:hover { background: rgba(var(--acc-rgb),.26); }
+.s-empty { text-align: center; color: var(--text2); font-size: 12px; padding: 18px 0; }
+.s-undo { display: flex; align-items: center; gap: 10px; margin-top: 0; max-height: 0; overflow: hidden; opacity: 0;
+  padding: 0 4px 0 12px; border-radius: 10px; background: rgba(255,255,255,0.07); font-size: 11.5px; color: var(--text);
+  transition: max-height .4s cubic-bezier(0.16,1,0.3,1), opacity .3s, margin-top .4s, padding .4s; }
+.s-undo.show { max-height: 44px; opacity: 1; margin-top: 8px; padding: 6px 6px 6px 12px; }
+.s-undo .u-txt { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-undo button { flex-shrink: 0; padding: 5px 10px; border-radius: 8px; border: none; background: var(--green); color: #000;
+  font-weight: 700; font-size: 11px; font-family: inherit; cursor: pointer; transition: background .2s, transform .15s; }
+.s-undo button:hover { background: #22d160; transform: scale(1.05); }
+.s-val { color: var(--acc-light); text-transform: none; letter-spacing: 0; }
+.s-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.s-chip { flex-shrink: 0; font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 10px; background: rgba(var(--acc-rgb),.14); color: var(--acc-light); border: 1px solid rgba(var(--acc-rgb),.28); }
+.s-item { flex-wrap: wrap; }
+.s-item .s-info { flex: 1 1 0; }
+.s-snz { flex-basis: 100%; display: flex; gap: 5px; max-height: 0; overflow: hidden; opacity: 0;
+  transition: max-height .35s cubic-bezier(0.16,1,0.3,1), opacity .25s, margin-top .35s; }
+.s-item.snz-open .s-snz { max-height: 46px; opacity: 1; margin-top: 7px; }
+.s-snz button small { display: block; font-size: 9px; font-weight: 500; opacity: .75; margin-top: 1px; }
+.s-pick { position: relative; flex: 0 0 34px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); cursor: pointer; font-size: 13px; overflow: hidden; }
+.s-pick:hover { background: rgba(255,255,255,.12); }
+.s-pick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.s-snz button { flex: 1; padding: 6px 4px; border-radius: 8px; border: 1px solid rgba(245,158,11,.3); background: rgba(245,158,11,.1);
+  color: #fbbf24; font-size: 10.5px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; transition: background .2s, transform .15s; }
+.s-snz button:hover { background: rgba(245,158,11,.22); transform: translateY(-1px); }
+.s-item.snz-open .s-btn.snz, .s-btn.snz:hover { background: rgba(245,158,11,.18); color: #fbbf24; border-color: rgba(245,158,11,.4); }
+.s-ask { display: none; gap: 4px; }
+.s-undo.ask .s-ask { display: flex; }
+.s-ask button { width: 28px; padding: 5px 0 !important; border: 1px solid rgba(255,255,255,.14) !important; background: rgba(255,255,255,.06) !important; color: var(--text) !important; }
+.s-ask button.won { border-color: rgba(251,191,36,.45) !important; background: rgba(251,191,36,.16) !important; }
+.s-undo.final .s-undo-btn { display: none; }
+.s-cool { flex-shrink: 0; font-size: 9.5px; font-weight: 700; padding: 1px 5px; border-radius: 10px; background: rgba(96,165,250,.14); color: #93c5fd; border: 1px solid rgba(96,165,250,.3); }
+.c-hint { display: none; margin: -4px 0 10px; padding: 6px 9px; border-radius: 8px; background: rgba(96,165,250,.1); border: 1px solid rgba(96,165,250,.25); color: #bfdbfe; font-size: 10.5px; line-height: 1.4; }
+.c-hint.show { display: block; animation: itemIn .3s cubic-bezier(0.16,1,0.3,1); }
+.c-hint b { color: #93c5fd; }
+mark { background: rgba(var(--acc-rgb),.28); color: #fff; border-radius: 3px; padding: 0 1px; }
+
+.biz-tick { width: 3px; height: 11px; border-radius: 2px; background: var(--c); flex-shrink: 0; margin-right: -1px; }
+.s-biz { flex-shrink: 0; font-size: 9px; font-weight: 600; padding: 1px 6px 1px 5px; border-radius: 10px; color: var(--text2); border: 1px solid rgba(255,255,255,.1); display: inline-flex; align-items: center; gap: 3px; }
+.s-biz::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--c); }
+.biz-pick { display: flex; flex-wrap: wrap; gap: 5px; }
+.bp-btn { display: flex; align-items: center; gap: 5px; padding: 6px 9px; border-radius: 8px; border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05); color: var(--text2); font-size: 11px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .2s; }
+.bp-btn i { width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+.bp-btn:hover { color: var(--text); background: rgba(255,255,255,0.1); }
+.bp-btn.on { border-color: var(--c); color: var(--text); background: rgba(255,255,255,0.09); box-shadow: 0 0 0 1px var(--c) inset; }
+.toast.hint { background: #1e1e1e; color: #fff; font-weight: 500; border: 1px solid rgba(255,255,255,.14); border-left: 3px solid var(--c); box-shadow: 0 6px 20px rgba(0,0,0,.6); white-space: normal; width: max-content; max-width: 330px; text-align: left; line-height: 1.35; border-radius: 12px; padding: 7px 12px; }
+.toast.hint b { color: #fff; font-weight: 700; }
+.no-money .s-chip, .no-money .s-val { display: none !important; }
+.no-score .s-ask { display: none !important; }
+
+.toast { position: absolute; bottom: 88px; left: 50%; transform: translateX(-50%) translateY(8px);
+  background: var(--green); color: #000; font-size: 11px; font-weight: 700; padding: 6px 16px;
+  border-radius: 20px; opacity: 0; pointer-events: none; white-space: nowrap;
+  transition: opacity 0.35s, transform 0.35s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 4px 16px rgba(var(--acc-rgb),0.4); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.dragging-win .card { cursor: grabbing; }
+</style>
+</head>
+<body>
+
+<div class="search-panel" id="search-panel">
+  <input class="s-input" id="s-input" type="text" placeholder="Buscar nome, número ou assunto..." autocomplete="off">
+  <div class="s-label" id="s-label">Hoje e atrasados</div>
+  <div class="s-list" id="s-list"></div>
+  <div class="s-undo" id="s-undo"><span class="u-txt"><span id="s-undo-prefix">✓ Concluído:</span> <b id="s-undo-name"></b></span><span class="s-ask"><button class="won" onclick="sOutcome('won')" title="Fechou a venda">💰</button><button class="lost" onclick="sOutcome('lost')" title="Não fechou">✗</button></span><button class="s-undo-btn" onclick="undoDone()">Desfazer</button></div>
+</div>
+
+<div class="form-panel" id="form-panel">
+  <div class="form-title">Novo retoma</div>
+  <div class="field" id="biz-field" style="display:none"><label>Negócio</label><div class="biz-pick" id="biz-pick"></div></div>
+  <div class="field"><label>Nome</label><input type="text" id="m-name" placeholder="Nome do cliente" autocomplete="off"></div>
+  <div class="field"><label>WhatsApp</label><input type="tel" id="m-phone" placeholder="11999999999" inputmode="numeric"></div>
+  <div class="c-hint" id="c-hint"></div>
+  <div class="field"><label>Assunto</label><input type="text" id="m-note" placeholder="Orçamento, retorno..." autocomplete="off"></div>
+  <div id="cf-box"></div>
+  <div class="row2">
+    <div class="field"><label>Data</label><input type="date" id="m-date"></div>
+    <div class="field"><label>Hora</label><input type="time" id="m-time"></div>
+  </div>
+  <div class="field">
+    <label>Prioridade</label>
+    <div class="prio-group">
+      <button class="prio-btn" id="p-alta"  onclick="setPrio('alta')">🔴 Alta</button>
+      <button class="prio-btn sel-media" id="p-media" onclick="setPrio('media')">🟡 Média</button>
+      <button class="prio-btn" id="p-baixa" onclick="setPrio('baixa')">🟢 Baixa</button>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn-cancel" onclick="closeForm()">Cancelar</button>
+    <button class="btn-save" onclick="saveNew()">Salvar</button>
+  </div>
+</div>
+
+<div class="card"
+  onmouseenter="window.api.mouseEnter()"
+  onmouseleave="window.api.mouseLeave()">
+  <img src="icon.png" style="width:28px;height:28px;object-fit:contain;border-radius:8px;flex-shrink:0;-webkit-app-region:no-drag" alt="R">
+  <div class="card-info">
+    <div class="card-top">
+      <div class="card-title zero" id="card-title">Nada pra hoje</div>
+      <div class="late-badge" id="late-badge" onclick="window.api.expandOverdue ? window.api.expandOverdue() : window.api.expand()" title="Ver atrasados"></div>
+    </div>
+    <div class="card-names" id="card-names"></div>
+  </div>
+  <button class="mini-btn" onclick="window.api.toPill()" title="Deixar só os números">
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>mini
+  </button>
+  <div class="card-btns">
+    <button class="c-btn search" id="search-btn" onclick="toggleSearch()" title="Buscar retomas">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    </button>
+    <button class="c-btn add" id="add-btn" onclick="toggleForm()" title="Novo retoma">+</button>
+    <button class="c-btn" onclick="window.api.expand()" title="Abrir app">⤢</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Salvo!</div>
+
+<script src="money.js"></script>
+<script>
+// ─── Arrastar a janela (o main segue o cursor; ver main.js → startDrag) ───
+function makeDraggable(handle, { onClickOnly } = {}) {
+  let down = null, moved = false
+  handle.addEventListener('mousedown', e => {
+    if (e.button !== 0 || e.target.closest('button, input, select, textarea, a, .no-drag')) return
+    down = { x: e.screenX, y: e.screenY }; moved = false
+  })
+  window.addEventListener('mousemove', e => {
+    if (!down || moved) return
+    if (Math.abs(e.screenX - down.x) + Math.abs(e.screenY - down.y) < 4) return
+    moved = true; document.body.classList.add('dragging-win'); window.api.dragStart()
+  })
+  const end = () => { if (!down) return; const m = moved; down = null; moved = false; document.body.classList.remove('dragging-win'); if (m) window.api.dragEnd() }
+  window.addEventListener('mouseup', end)
+  window.addEventListener('blur', end)
+}
+
+window.addEventListener('DOMContentLoaded', () => makeDraggable(document.querySelector('.card')))
+
+let formOpen = false
+let prioAtual = 'media'
+
+document.getElementById('form-panel').addEventListener('mouseenter', () => window.api.mouseEnter())
+document.getElementById('form-panel').addEventListener('mouseleave', () => window.api.mouseLeave())
+
+function setPrio(p) {
+  prioAtual = p
+  ;['alta','media','baixa'].forEach(x => {
+    const btn = document.getElementById('p-'+x)
+    btn.className = 'prio-btn' + (x === p ? ' sel-'+x : '')
+  })
+}
+
+let meta = null, bizSel = null
+const multi = () => meta && meta.businesses.filter(b => !b.archived).length > 1
+const feat = k => !meta || meta.features[k] !== false
+function bizOf(id) { return meta ? meta.businesses.find(b => b.id === id) : null }
+function applyAccent(hex) {
+  const h = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : '#1db954'
+  const n = parseInt(h.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255, L = c => Math.round(c + (255 - c) * 0.35)
+  const st = document.documentElement.style
+  st.setProperty('--green', h); st.setProperty('--acc-rgb', `${r},${g},${b}`); st.setProperty('--acc-light', `rgb(${L(r)},${L(g)},${L(b)})`)
+}
+function update(data) {
+  if (data.meta) {
+    meta = data.meta
+    applyAccent(meta.settings && meta.settings.visual && meta.settings.visual.accent)
+    document.body.classList.toggle('no-money', !feat('money'))
+    document.body.classList.toggle('no-score', !feat('score'))
+  }
+  const title = document.getElementById('card-title')
+  const names = document.getElementById('card-names')
+  const dot   = document.getElementById('dot')
+  const badge = document.getElementById('late-badge')
+
+  if (data.count === 0) {
+    title.textContent = 'Nada pra hoje'
+    title.className   = 'card-title zero'
+    names.innerHTML   = ''
+    if (dot) dot.className = 'status-dot zero'
+  } else {
+    title.textContent = `${data.count} retoma${data.count > 1 ? 's' : ''} hoje`
+    title.className   = 'card-title'
+    if (dot) dot.className = 'status-dot'
+    // Mostrar bolinhas de prioridade + nomes
+    names.innerHTML = data.items.map(item => {
+      const prio = item.prio || 'media'
+      const nm = String(item.name).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      const tick = data.multi && item.color ? `<span class="biz-tick" style="--c:${item.color}" title="${String(item.biz).replace(/"/g,'&quot;')}"></span>` : ''
+      return `<span class="nm">${tick}<span class="prio-dot ${prio}"></span><span style="color:rgba(255,255,255,0.6);font-size:11px">${nm}</span></span>`
+    }).join('<span style="color:rgba(255,255,255,0.2);margin:0 2px;flex-shrink:0">·</span>')
+  }
+
+  const tip = []
+  if (data.valueToday) tip.push(`${Money.fmtMoney(data.valueToday)} em retomas hoje`)
+  if (data.valueLate)  tip.push(`${Money.fmtMoney(data.valueLate)} parados em atrasados`)
+  if (data.multi && data.byBiz) data.byBiz.forEach(b => { if (b.today || b.late) tip.push(`${b.name}: ${b.today} hoje${b.late ? ', ' + b.late + ' atrasado' + (b.late > 1 ? 's' : '') : ''}`) })
+  title.title = tip.join('\n')
+
+  if (data.lateCount > 0) {
+    badge.textContent = `${data.lateCount} atrasado${data.lateCount > 1 ? 's' : ''}`
+    badge.classList.add('show')
+  } else {
+    badge.classList.remove('show')
+  }
+}
+
+function toggleForm() { formOpen ? closeForm() : openForm() }
+
+// ─── BUSCA ─────────────────────────────────────────────────────────────
+let searchOpen = false, allItems = []
+const WPP = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.3-.5 0-1 .2-3.3-.7-2.8-1.1-4.5-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>'
+const PRIO_ORDER = { alta: 0, media: 1, baixa: 2 }
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+
+function localToday() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
+function escH(t) { return String(t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;') }
+function hl(t, q) {
+  const safe = escH(t)
+  if (!q) return safe
+  const i = String(t || '').toLowerCase().indexOf(q)
+  if (i < 0) return safe
+  const raw = String(t)
+  return escH(raw.slice(0, i)) + '<mark>' + escH(raw.slice(i, i + q.length)) + '</mark>' + escH(raw.slice(i + q.length))
+}
+function dLabel(ds, today) {
+  if (ds === today) return 'Hoje'
+  const [, m, d] = ds.split('-'); return `${parseInt(d)} ${MESES[parseInt(m) - 1]}`
+}
+
+function toggleSearch() { searchOpen ? closeSearch() : openSearch() }
+
+async function openSearch() {
+  if (formOpen) closeForm()
+  searchOpen = true
+  document.getElementById('search-panel').classList.add('open')
+  document.getElementById('search-btn').classList.add('active')
+  allItems = await window.api.getAll()
+  const inp = document.getElementById('s-input')
+  inp.value = ''
+  renderSearch()
+  setTimeout(() => inp.focus(), 120)
+}
+
+function closeSearch() {
+  searchOpen = false
+  document.getElementById('search-panel').classList.remove('open')
+  document.getElementById('search-btn').classList.remove('active')
+}
+
+function renderSearch() {
+  const q = document.getElementById('s-input').value.trim().toLowerCase()
+  const today = localToday()
+  let list
+  if (!q) {
+    list = allItems.filter(f => f.date <= today)
+    const v = Money.sumValues(list)
+    document.getElementById('s-label').innerHTML = 'Hoje e atrasados' + (v ? ` <span class="s-val">· ${Money.fmtMoney(v)} em jogo</span>` : '')
+  } else {
+    list = allItems.filter(f =>
+      (f.name || '').toLowerCase().includes(q) ||
+      (f.phone || '').includes(q) ||
+      (f.note || '').toLowerCase().includes(q) || cfText(f).includes(q))
+    const v = Money.sumValues(list)
+    document.getElementById('s-label').innerHTML = `${list.length} resultado${list.length === 1 ? '' : 's'}` + (v ? ` <span class="s-val">· ${Money.fmtMoney(v)}</span>` : '')
+  }
+  list.sort((a, b) => a.date.localeCompare(b.date) || (PRIO_ORDER[a.prio||'media'] - PRIO_ORDER[b.prio||'media']) || (a.time||'').localeCompare(b.time||''))
+  const box = document.getElementById('s-list')
+  if (!list.length) {
+    box.innerHTML = `<div class="s-empty">${q ? 'Nada encontrado' : 'Nada pra hoje 🎉'}</div>`
+    return
+  }
+  box.innerHTML = list.slice(0, 60).map((f, i) => {
+    const late = f.date < today
+    const prio = f.prio || 'media'
+    return `<div class="s-item ${late ? 'late' : ''}" data-id="${escH(f.id)}" style="animation-delay:${Math.min(i, 8) * 30}ms">
+      <div class="s-info">
+        <div class="s-name">${multi() && bizOf(f.biz) ? `<span class="biz-tick" style="--c:${bizOf(f.biz).color}" title="${escH(bizOf(f.biz).name)}"></span>` : ''}<span class="prio-dot ${prio}"></span><span class="s-nm">${hl(f.name, q)}</span>${Money.valueOf(f) ? `<span class="s-chip">${Money.fmtMoney(Money.valueOf(f))}</span>` : ''}${feat('cooling') && (f.snoozes || 0) >= 3 ? `<span class="s-cool" title="Adiado ${f.snoozes} vezes">🧊${f.snoozes}x</span>` : ''}</div>
+        <div class="s-meta">${hl(f.phone, q)} · <span class="${late ? 'late-txt' : ''}">${dLabel(f.date, today)}${f.time ? ' ' + escH(f.time) : ''}</span>${f.note ? ' · ' + hl(f.note, q) : ''}${cfMeta(f)}</div>
+      </div>
+      <div class="s-acts">
+        <button class="s-btn wpp" title="Abrir WhatsApp" onclick="window.api.openWhatsapp('${escH(f.phone)}','${escH(f.biz || '')}')">${WPP}</button>
+        <button class="s-btn snz" title="Adiar" onclick="toggleSnz(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></svg></button>
+        <button class="s-btn" title="Editar (abre o app)" onclick="window.api.edit('${escH(f.id)}')">✏️</button>
+        <button class="s-btn" title="Feito" onclick="markDone('${escH(f.id)}', this)">✓</button>
+      </div>
+      <div class="s-snz">${Money.snoozeOptions().map(o => { const n = allItems.filter(x => x.date === o.date && x.id !== f.id).length
+        return `<button title="${o.sub}${n ? ' · ' + n + ' marcado' + (n > 1 ? 's' : '') : ''}" onclick="snoozeItem('${escH(f.id)}','${o.date}',this)">${o.label}<small>${o.sub.split(', ')[0]}${n ? ' · ' + n : ''}</small></button>` }).join('')}<label class="s-pick" title="Escolher data">📅<input type="date" min="${localToday()}" onclick="try{this.showPicker()}catch(e){}" onchange="if(this.value) snoozeItem('${escH(f.id)}', this.value, this)"></label></div>
+    </div>`
+  }).join('')
+}
+
+function toggleSnz(btn) {
+  const it = btn.closest('.s-item')
+  document.querySelectorAll('.s-item.snz-open').forEach(x => { if (x !== it) x.classList.remove('snz-open') })
+  it.classList.toggle('snz-open')
+}
+function snoozeItem(id, date, btn) {
+  const el = btn.closest('.s-item'); el.classList.add('leaving')
+  const item = allItems.find(f => f.id === id); if (!item) return
+  const old = item.date
+  window.api.snooze(id, date)
+  item.date = date
+  setTimeout(renderSearch, 280)
+  item.snoozes = (item.snoozes || 0) + 1
+  showSUndo('⏰ ' + Money.shortDate(date) + ':', item.name, async () => { window.api.snooze(id, old, true); item.date = old; item.snoozes = Math.max(0, item.snoozes - 1) })
+}
+
+let undoTimer = null, undoId = null
+function markDone(id, btn) {
+  const el = btn.closest('.s-item')
+  el.classList.add('leaving')
+  const item = allItems.find(f => f.id === id)
+  window.api.done(id)
+  allItems = allItems.filter(f => f.id !== id)
+  setTimeout(renderSearch, 280)
+  if (item) {
+    showSUndo('✓ Concluído:', item.name, async () => { await window.api.restore(id) })
+    sAskId = id
+    if (feat('score')) document.getElementById('s-undo').classList.add('ask')
+  }
+}
+let sUndoAction = null
+let sAskId = null
+async function sOutcome(o) {
+  const u = document.getElementById('s-undo')
+  u.classList.remove('ask')
+  if (!sAskId) return
+  await window.api.setOutcome(sAskId, o)
+  document.getElementById('s-undo-prefix').textContent = o === 'won' ? '💰 Fechou!' : 'Anotado:'
+  document.getElementById('s-undo-name').textContent = o === 'won' ? 'foi pro placar' : 'não fechou'
+  sUndoAction = null; sAskId = null
+  u.classList.add('final')
+  clearTimeout(undoTimer)
+  undoTimer = setTimeout(() => { u.classList.remove('show'); setTimeout(() => u.classList.remove('final'), 500) }, 2400)
+}
+function showSUndo(prefix, name, action) {
+  document.getElementById('s-undo-prefix').textContent = prefix
+  document.getElementById('s-undo-name').textContent = name
+  sUndoAction = action
+  const u = document.getElementById('s-undo')
+  u.classList.remove('show', 'ask', 'final'); void u.offsetWidth; u.classList.add('show')
+  clearTimeout(undoTimer)
+  undoTimer = setTimeout(() => u.classList.remove('show'), 8000)
+}
+async function undoDone() {
+  document.getElementById('s-undo').classList.remove('show')
+  clearTimeout(undoTimer)
+  const a = sUndoAction; sUndoAction = null
+  if (!a) return
+  await a()
+  allItems = await window.api.getAll()
+  renderSearch()
+}
+
+document.getElementById('s-input').addEventListener('input', renderSearch)
+document.getElementById('search-panel').addEventListener('mouseenter', () => window.api.mouseEnter())
+document.getElementById('search-panel').addEventListener('mouseleave', () => window.api.mouseLeave())
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return
+  if (searchOpen) closeSearch()
+  else if (formOpen) closeForm()
+})
+
+function openForm() {
+  if (searchOpen) closeSearch()
+  formOpen = true
+  document.getElementById('form-panel').classList.add('open')
+  document.getElementById('add-btn').classList.add('active')
+  document.getElementById('add-btn').textContent = '×'
+  const now = new Date()
+  document.getElementById('m-date').value  = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })()
+  document.getElementById('m-time').value  = '09:00'
+  document.getElementById('m-name').value  = ''
+  document.getElementById('m-phone').value = ''
+  document.getElementById('m-note').value  = ''
+  setPrio('media')
+  const act = meta ? meta.businesses.filter(b => !b.archived) : []
+  cfVals = {}
+  setBizPick(meta && act.some(b => b.id === meta.ui.lastBiz) ? meta.ui.lastBiz : (act[0] || {}).id)
+  document.getElementById('c-hint').classList.remove('show')
+  loadHistory()
+  setTimeout(() => document.getElementById('m-name').focus(), 420)
+}
+
+// ─── Campos personalizados (0.7.1) ───
+let cfVals = {}
+const bizFields = id => ((bizOf(id) || {}).fields || []).filter(fd => !fd.off)   // 1.3: campo desligado some do app
+function fmtField(fd, v) {
+  if (v === undefined || v === null || v === '') return ''
+  if (fd.type === 'money') return 'R$ ' + Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+  if (fd.type === 'number') return Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+  return String(v)
+}
+const cfText = f => f.fields ? bizFields(f.biz).map(fd => fmtField(fd, f.fields[fd.id])).join(' ').toLowerCase() : ''
+function cfMeta(f) {
+  if (!f.fields) return ''
+  const parts = bizFields(f.biz).filter(fd => fd.onCard && fd.type !== 'money' && f.fields[fd.id] !== undefined).map(fd => `${escH(fd.label)} ${escH(fmtField(fd, f.fields[fd.id]))}`)
+  return parts.length ? ` · <span class="s-cf">${parts.join(' · ')}</span>` : ''
+}
+function renderCF(bizId) {
+  const box = document.getElementById('cf-box'); if (!box) return
+  box.innerHTML = bizFields(bizId).map(fd => {
+    const v = cfVals[fd.id]
+    if (fd.type === 'choice') return `<div class="field"><label>${escH(fd.label)}</label><div class="cf-opts">${fd.options.map(o =>
+      `<button type="button" class="cf-opt ${v === o ? 'on' : ''}" data-v="${escH(o)}" onclick="cfPick('${fd.id}', this)">${escH(o)}</button>`).join('')}</div></div>`
+    return `<div class="field"><label>${escH(fd.label)}</label><input type="text" ${fd.type !== 'text' ? 'inputmode="decimal"' : ''} placeholder="${fd.type === 'money' ? 'R$ 0,00' : fd.type === 'number' ? '0' : ''}" value="${escH(v || '')}" oninput="cfVals['${fd.id}']=this.value" autocomplete="off"></div>`
+  }).join('')
+}
+function cfPick(id, btn) {
+  const v = btn.dataset.v
+  cfVals[id] = cfVals[id] === v ? '' : v
+  btn.parentElement.querySelectorAll('.cf-opt').forEach(b => b.classList.toggle('on', b.dataset.v === cfVals[id]))
+}
+
+function setBizPick(id) {
+  bizSel = id || null
+  const field = document.getElementById('biz-field')
+  field.style.display = multi() ? '' : 'none'
+  if (!meta) return
+  document.getElementById('biz-pick').innerHTML = meta.businesses.filter(b => !b.archived).map(b =>
+    `<button type="button" class="bp-btn ${b.id === id ? 'on' : ''}" style="--c:${b.color}" onclick="setBizPick('${b.id}')"><i></i>${escH(b.name)}</button>`).join('')
+  renderCF(id)
+}
+
+function closeForm() {
+  formOpen = false
+  document.getElementById('form-panel').classList.remove('open')
+  document.getElementById('add-btn').classList.remove('active')
+  document.getElementById('add-btn').textContent = '+'
+}
+
+function saveNew() {
+  const name  = document.getElementById('m-name').value.trim()
+  const phone = document.getElementById('m-phone').value.trim()
+  const note  = document.getElementById('m-note').value.trim()
+  const date  = document.getElementById('m-date').value
+  const time  = document.getElementById('m-time').value
+  if (!name || !phone || !date) {
+    if (!name)  document.getElementById('m-name').style.borderColor  = '#e53935'
+    if (!phone) document.getElementById('m-phone').style.borderColor = '#e53935'
+    if (!date)  document.getElementById('m-date').style.borderColor  = '#e53935'
+    setTimeout(() => document.querySelectorAll('.field input').forEach(i => i.style.borderColor = ''), 1500)
+    return
+  }
+  const fields = {}
+  for (const [k, v] of Object.entries(cfVals)) if (v !== '' && v != null) fields[k] = v
+  window.api.saveNew({ name, phone, note, date, time, prio: prioAtual, biz: bizSel, fields })
+  if (meta && bizSel) meta.ui.lastBiz = bizSel
+  const toast = document.getElementById('toast')
+  toast.className = 'toast'; toast.textContent = '✓ Salvo!'
+  toast.classList.add('show')
+  setTimeout(() => toast.classList.remove('show'), 1800)
+  closeForm()
+}
+
+
+// ─── HISTÓRICO DO CLIENTE no formulário ─────────────────────────────────
+let cAll = [], cDone = []
+const cDigits = s => String(s || '').replace(/\D/g, '')
+const cKey = s => { let d = cDigits(s); if (d.length >= 12 && d.startsWith('55')) d = d.slice(2); if (d.length >= 10) d = d.slice(2); return d.length >= 8 ? d.slice(-8) : '' }
+function cSame(a, b) { const pa = cKey(a.phone); return !!pa && pa === cKey(b.phone) }
+function cHint() {
+  const me = { name: document.getElementById('m-name').value, phone: document.getElementById('m-phone').value }
+  const el = document.getElementById('c-hint')
+  if (!cKey(me.phone)) { el.classList.remove('show'); return }
+  const act = cAll.filter(f => cSame(me, f)), old = cDone.filter(f => cSame(me, f))
+  if (!feat('history') || (!act.length && !old.length)) { el.classList.remove('show'); return }
+  const today = localToday()
+  const parts = [`<b>${act.length + old.length + 1}º contato</b>`]
+  const last = old.sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''))[0]
+  if (last) parts.push(`último ${dLabel(Money.ymd(new Date(last.doneAt || last.date)), today)}${last.note ? ': ' + escH(last.note) : ''}${last.outcome === 'won' ? ' 💰' : ''}`)
+  if (act.length) parts.push(`já marcado ${act.map(f => dLabel(f.date, today)).join(', ')}`)
+  el.innerHTML = '🕘 ' + parts.join(' · ')
+  el.classList.add('show')
+}
+;['m-name', 'm-phone'].forEach(id => document.getElementById(id).addEventListener('input', cHint))
+async function loadHistory() {
+  try { cAll = await window.api.getAll(); cDone = await window.api.getDone() } catch (e) {}
+  cHint()
+}
+
+// ─── Ctrl+Alt+R: novo retoma com o número copiado ───────────────────────
+window.api.onQuickAdd(({ phone }) => {
+  openForm()
+  if (phone) {
+    document.getElementById('m-phone').value = phone.trim()
+    setTimeout(() => document.getElementById('m-name').focus(), 430)
+  }
+  loadHistory()
+})
+
+// "Abrindo pela Construpac · confira o número" (o Retoma não troca a conta do WhatsApp)
+let hintT = null
+window.api.onWppHint(h => {
+  const t = document.getElementById('toast')
+  const d = String(h.phone || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '')
+  const ph = d.length === 11 ? `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}` : d
+  t.className = 'toast hint'; t.style.setProperty('--c', h.color)
+  t.innerHTML = `📱 Abrindo pela <b>${escH(h.name)}</b> · confira se o WhatsApp está no ${escH(ph)}`
+  void t.offsetWidth; t.classList.add('show')
+  clearTimeout(hintT); hintT = setTimeout(() => t.classList.remove('show'), 4200)
+})
+window.api.getMeta().then(m => { meta = m })
+
+window.api.onUpdate(update)
+update({ count: 0, items: [], lateCount: 0 })
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "supabaseUrl": "https://SEU-PROJETO.supabase.co",
+  "supabaseAnonKey": "COLE-AQUI-A-CHAVE-anon-public",
+  "updateUrl": "https://SEU-PROJETO.supabase.co/storage/v1/object/public/releases",
+  "siteUrl": "",
+  "webAppUrl": ""
+}

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<style>
+:root { --green: #1db954; --acc-rgb: 29,185,84; --acc-light: #4ade80; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; background: transparent; overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; user-select: none; }
+
+.pill {
+  position: absolute; inset: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(18,18,18,0.94); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px; cursor: pointer; color: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.55);
+  transition: background .25s, border-color .25s, transform .25s cubic-bezier(0.34,1.56,0.64,1);
+  animation: pillIn .45s cubic-bezier(0.34,1.56,0.64,1);
+}
+.pill:hover { background: rgba(28,28,28,0.97); border-color: rgba(var(--acc-rgb),0.45); transform: scale(1.04); }
+.pill:active { transform: scale(0.96); }
+.pill.dragging { cursor: grabbing; transform: scale(1.06); border-color: rgba(var(--acc-rgb),0.6); }
+@keyframes pillIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+
+.stat { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot.green { background: var(--green); box-shadow: 0 0 6px rgba(var(--acc-rgb),.8); }
+.dot.red   { background: #e53935; box-shadow: 0 0 6px rgba(229,57,53,.8); animation: pulse 2s infinite; }
+.dot.zero  { background: rgba(255,255,255,.25); box-shadow: none; animation: none; }
+.stat.zero { color: rgba(255,255,255,.4); }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 4px rgba(229,57,53,.6); } 50% { box-shadow: 0 0 10px rgba(229,57,53,1); } }
+.num { transition: transform .3s; display: inline-block; }
+.num.pop { animation: pop .45s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.dot.biz { background: var(--c); box-shadow: 0 0 6px var(--c); }
+.dot.other { background: rgba(255,255,255,.55); box-shadow: none; }
+#segs { display: flex; align-items: center; gap: 10px; }
+.sep { width: 1px; height: 16px; background: rgba(255,255,255,.12); }
+</style>
+</head>
+<body>
+<div class="pill" id="pill" title="Clique: abrir · Arraste: mover · Botão direito: opções">
+  <div id="segs"><div class="stat zero" data-k="0"><span class="dot zero"></span><span class="num">0</span></div></div>
+  <div class="sep"></div>
+  <div class="stat" id="st-late"><span class="dot red" id="d-late"></span><span class="num" id="n-late">0</span></div>
+</div>
+
+<script>
+const pill = document.getElementById('pill')
+let down = null, moved = false
+
+pill.addEventListener('mousedown', e => {
+  if (e.button !== 0) return
+  down = { x: e.screenX, y: e.screenY }
+  moved = false
+})
+window.addEventListener('mousemove', e => {
+  if (!down || moved) return
+  const dx = e.screenX - down.x, dy = e.screenY - down.y
+  if (Math.abs(dx) + Math.abs(dy) < 4) return   // tremidinha não conta como arrastar
+  moved = true
+  pill.classList.add('dragging')
+  window.api.dragStart()          // daqui pra frente a janela segue o cursor sozinha
+})
+window.addEventListener('blur', () => {
+  if (down && moved) { down = null; pill.classList.remove('dragging'); window.api.dragEnd() }
+})
+window.addEventListener('mouseup', () => {
+  if (!down) return
+  down = null
+  pill.classList.remove('dragging')
+  if (moved) window.api.dragEnd()
+  else window.api.toCard()          // clique simples: abre o card
+})
+pill.addEventListener('contextmenu', e => { e.preventDefault(); window.api.menu() })
+
+function setNum(id, v) {
+  const el = typeof id === 'string' ? document.getElementById(id) : id
+  if (el.textContent !== String(v)) {
+    el.textContent = v
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop')
+  }
+}
+
+function applyAccent(hex) {
+  const h = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : '#1db954'
+  const n = parseInt(h.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255
+  document.documentElement.style.setProperty('--green', h); document.documentElement.style.setProperty('--acc-rgb', `${r},${g},${b}`)
+}
+window.api.onUpdate(d => {
+  if (d.meta && d.meta.settings && d.meta.settings.visual) applyAccent(d.meta.settings.visual.accent)
+  // Uma bolinha por negócio (até 3, cor de cada um) + "outros"; com um negócio só fica igual a antes
+  const segs = d.segs && d.segs.length ? d.segs : [{ count: d.count, color: '#1db954' }]
+  const box = document.getElementById('segs')
+  const key = segs.map(x => x.color || 'o').join('|')
+  if (box.dataset.key !== key) {
+    box.dataset.key = key
+    box.innerHTML = segs.map((x, i) => `<div class="stat" data-k="${i}"><span class="dot"></span><span class="num">${x.count}</span></div>`).join('')
+  }
+  segs.forEach((x, i) => {
+    const st = box.children[i]; if (!st) return
+    st.classList.toggle('zero', !x.count)
+    const dot = st.firstElementChild
+    dot.className = 'dot ' + (!x.count ? 'zero' : x.other ? 'other' : 'biz')
+    if (x.color) dot.style.setProperty('--c', x.color)
+    setNum(st.lastElementChild, x.count)
+  })
+  setNum('n-late', d.lateCount)
+  document.getElementById('st-late').classList.toggle('zero', !d.lateCount)
+  document.getElementById('d-late').className = 'dot ' + (d.lateCount ? 'red' : 'zero')
+  const brl = n => n >= 1000 ? 'R$ ' + (Math.round(n / 100) / 10).toString().replace('.', ',') + ' mil' : 'R$ ' + n
+  const per = d.multi && d.byBiz ? '\n' + d.byBiz.map(b => `${b.name}: ${b.today} hoje${b.late ? ', ' + b.late + ' atrasado' + (b.late > 1 ? 's' : '') : ''}`).join('\n') : ''
+  pill.title = `${d.count} retoma${d.count === 1 ? '' : 's'} hoje${d.valueToday ? ' (' + brl(d.valueToday) + ')' : ''} · ${d.lateCount} atrasado${d.lateCount === 1 ? '' : 's'}${d.valueLate ? ' (' + brl(d.valueLate) + ')' : ''}${per}\nClique: abrir · Arraste: mover · Botão direito: opções`
+})
+</script>
+</body>
+</html>

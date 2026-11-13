@@ -1,0 +1,26 @@
+const { contextBridge, ipcRenderer } = require('electron')
+
+contextBridge.exposeInMainWorld('api', {
+  expand:     ()      => ipcRenderer.send('expand-main'),
+  expandOverdue: ()   => ipcRenderer.send('expand-overdue'),
+  toPill:     ()      => ipcRenderer.send('to-pill'),
+  getAll:     ()      => ipcRenderer.invoke('compact-get-all'),
+  done:       (id)    => ipcRenderer.send('compact-done', id),
+  restore:    (id)    => ipcRenderer.invoke('restore', id),
+  snooze:     (id, date, undo) => ipcRenderer.send('snooze', { id, date, undo: !!undo }),
+  setOutcome: (id, o) => ipcRenderer.invoke('set-outcome', { id, outcome: o }),
+  getDone:    ()      => ipcRenderer.invoke('get-done'),
+  onQuickAdd: (cb)    => ipcRenderer.on('quick-add', (_, d) => cb(d)),
+  edit:       (id)    => ipcRenderer.send('expand-edit', id),
+  openWhatsapp: (ph, biz) => ipcRenderer.send('open-whatsapp', { phone: ph, biz }),
+  onWppHint:  (cb)    => ipcRenderer.on('wpp-hint', (_, h) => cb(h)),
+  getMeta:    ()      => ipcRenderer.invoke('get-meta'),
+  openSettings: ()    => ipcRenderer.send('open-settings'),
+  dragStart:  ()      => ipcRenderer.send('win-drag-start'),
+  dragEnd:    ()      => ipcRenderer.send('win-drag-end'),
+  minimize:   ()      => ipcRenderer.send('minimize'),
+  saveNew:    (data)  => ipcRenderer.send('compact-save', data),
+  onUpdate:   (cb)    => ipcRenderer.on('compact-update', (_, d) => cb(d)),
+  mouseEnter: ()      => ipcRenderer.send('mouse-enter'),
+  mouseLeave: ()      => ipcRenderer.send('mouse-leave'),
+})

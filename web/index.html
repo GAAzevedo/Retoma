@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f0f0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Retoma</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#0f0f0f;--surface:#1a1a1a;--surface2:#222;--border:rgba(255,255,255,.08);--text:#fff;--text2:rgba(255,255,255,.5);--green:#1db954;--acc-rgb:29,185,84;--acc-light:#4ade80;--red:#e53935;--yellow:#f59e0b}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;min-height:100%}
+body{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit;font-size:16px}
+.hide{display:none!important}
+/* topo */
+.top{position:sticky;top:0;z-index:10;background:rgba(15,15,15,.92);backdrop-filter:blur(14px);padding:calc(10px + env(safe-area-inset-top)) 16px 8px;border-bottom:1px solid var(--border)}
+.top-row{display:flex;align-items:center;gap:10px}
+.top-row img{width:30px;height:30px;border-radius:8px}
+.top-row h1{font-size:18px;font-weight:700;flex:1}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:16px;display:grid;place-items:center}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:600;white-space:nowrap}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.chip.on{background:rgba(255,255,255,.08);color:var(--text);border-color:var(--c,rgba(var(--acc-rgb),.5))}
+.chip.warn{color:#fdba74;border-color:rgba(249,115,22,.4)}
+.tabs{display:flex;gap:4px;margin-top:8px;background:var(--surface);border-radius:11px;padding:3px}
+.tab{flex:1;padding:8px 0;border:none;border-radius:9px;background:none;color:var(--text2);font-size:13px;font-weight:600}
+.tab.on{background:var(--surface2);color:var(--text)}
+.offline{background:#3a2a10;color:#fdba74;text-align:center;font-size:12px;padding:6px}
+/* resumo */
+.sum{display:flex;gap:8px;padding:14px 16px 4px}
+.sum div{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:10px 12px}
+.sum b{display:block;font-size:20px}
+.sum small{color:var(--text2);font-size:11.5px}
+.sum .late b{color:#ff6b6b}
+.sum .money b{color:var(--acc-light);font-size:16px;padding-top:3px}
+/* lista */
+.list{padding:8px 16px}
+.sec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);margin:14px 2px 8px}
+.sec.late{color:#ff6b6b}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:13px 14px;margin-bottom:9px;animation:in .35s cubic-bezier(.16,1,.3,1) both}
+.card.late{border-color:rgba(229,57,53,.3);background:linear-gradient(135deg,rgba(229,57,53,.06),var(--surface))}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.c-top{display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.dot.alta{background:var(--red)}.dot.media{background:var(--yellow)}.dot.baixa{background:#22c55e}
+.c-name{font-weight:650;font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-when{font-size:12px;color:var(--text2);flex-shrink:0}
+.c-when.late{color:#ff6b6b;font-weight:600}
+.c-meta{font-size:13px;color:var(--text2);margin:5px 0 0;line-height:1.35}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--text)}
+.tag em{font-style:normal;color:var(--text2);font-weight:500}
+.tag.val{color:var(--acc-light);border-color:rgba(var(--acc-rgb),.3);background:rgba(var(--acc-rgb),.08)}
+.tag.biz::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--c);margin-right:5px}
+.tag.own{color:var(--text2)}
+.tag.none{color:#fdba74;border-color:rgba(249,115,22,.35)}
+.acts{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:7px;margin-top:11px}
+.act{padding:10px 0;border-radius:11px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px}
+.act.wpp{background:rgba(37,211,102,.14);border-color:rgba(37,211,102,.35);color:#4ade80}
+.empty{text-align:center;color:var(--text2);padding:50px 20px;font-size:14px}
+.empty b{display:block;font-size:34px;margin-bottom:8px}
+/* botão novo */
+.fab{position:fixed;right:18px;bottom:calc(22px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;border:none;background:var(--green);color:#fff;font-size:30px;box-shadow:0 8px 24px rgba(var(--acc-rgb),.45);z-index:20}
+/* folhas (bottom sheet) */
+.sheet-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet-ov.open{opacity:1;pointer-events:all}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--surface);border-radius:20px 20px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .35s cubic-bezier(.16,1,.3,1)}
+.sheet-ov.open .sheet{transform:none}
+.grab{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:0 auto 12px}
+.sh-t{font-size:18px;font-weight:700;margin-bottom:6px}
+.sh-p{font-size:13.5px;color:var(--text2);line-height:1.45;margin-bottom:8px}
+.lbl{display:block;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 5px}
+.inp{width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--text);outline:none}
+.inp:focus{border-color:rgba(var(--acc-rgb),.55)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{padding:9px 13px;border-radius:11px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:14px;font-weight:600}
+.opt.on{border-color:rgba(var(--acc-rgb),.75);color:var(--acc-light);background:rgba(var(--acc-rgb),.18)}
+.opt i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:6px}
+.btn{width:100%;padding:14px;border-radius:13px;border:none;background:var(--green);color:#fff;font-size:16px;font-weight:700;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px}
+.btn:disabled{opacity:.6}
+.btn.ghost{background:var(--surface2);border:1px solid var(--border);color:var(--text);margin-top:8px}
+.btn.danger{background:rgba(229,57,53,.15);color:#ff8a80;border:1px solid rgba(229,57,53,.35)}
+.big-opt{display:block;width:100%;text-align:left;padding:14px 15px;border-radius:13px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:15px;font-weight:600;margin-bottom:8px}
+.big-opt small{float:right;color:var(--text2);font-weight:500}
+.msg{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:13.5px;line-height:1.4}
+.msg.err{background:rgba(229,57,53,.1);border:1px solid rgba(229,57,53,.3);color:#ff8a80}
+.msg.ok{background:rgba(var(--acc-rgb),.1);border:1px solid rgba(var(--acc-rgb),.3);color:var(--acc-light)}
+.links{display:flex;justify-content:space-between;margin-top:14px;font-size:14px}
+.links a{color:var(--text2)}
+.google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px;border-radius:13px;border:none;background:#fff;color:#1f1f1f;font-size:15px;font-weight:600;margin-top:8px}
+.or{display:flex;align-items:center;gap:10px;margin:14px 0 2px;color:var(--text2);font-size:12px}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--border)}
+.spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.code{text-align:center;letter-spacing:.35em;font-size:22px;font-weight:700}
+/* entrada */
+.login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px 22px;background:radial-gradient(circle at 50% 0%,rgba(var(--acc-rgb),.18),transparent 60%)}
+.hero{text-align:center;margin-bottom:22px}
+.hero img{width:72px;height:72px;border-radius:18px;box-shadow:0 0 34px rgba(var(--acc-rgb),.35)}
+.hero h2{font-size:28px;font-weight:800;margin-top:10px;background:linear-gradient(90deg,var(--acc-light),#22d3ee);-webkit-background-clip:text;color:transparent}
+.hero p{color:var(--text2);font-size:14px;margin-top:2px}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:#262626;border:1px solid rgba(255,255,255,.12);padding:11px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:all .3s;z-index:60;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:all}
+.toast a{color:var(--acc-light);margin-left:8px;font-weight:600}
+.cfg-warn{margin:30px 20px;padding:16px;border-radius:14px;background:var(--surface);border:1px solid var(--border);font-size:14px;line-height:1.5;color:var(--text2)}
+.cfg-warn b{color:var(--text)}
+</style>
+</head>
+<body>
+<div id="offline" class="offline hide">Sem internet: mostrando o último carregado</div>
+
+<!-- Entrada -->
+<section id="login" class="login hide">
+  <div class="hero"><img src="icon-192.png" alt=""><h2>Retoma</h2><p>Nenhum cliente esquecido.</p></div>
+  <div id="auth"></div>
+</section>
+
+<!-- App -->
+<section id="app" class="hide">
+  <header class="top">
+    <div class="top-row"><img src="icon-192.png" alt=""><h1>Retoma</h1>
+      <button class="icon-btn" id="btn-refresh" title="Atualizar" onclick="load()">↻</button>
+      <button class="icon-btn" title="Conta" onclick="openAccount()">☰</button></div>
+    <div class="chips" id="biz-chips"></div>
+    <div class="chips hide" id="own-chips"></div>
+    <div class="tabs"><button class="tab on" data-t="hoje" onclick="setTab('hoje')">Hoje</button><button class="tab" data-t="semana" onclick="setTab('semana')">Semana</button><button class="tab" data-t="busca" onclick="setTab('busca')">Buscar</button></div>
+  </header>
+  <div class="sum" id="sum"></div>
+  <div class="list"><input class="inp hide" id="q" placeholder="Nome, telefone ou assunto" oninput="render()"><div id="list"></div></div>
+  <button class="fab" onclick="openForm()" aria-label="Novo retoma">+</button>
+</section>
+
+<div class="cfg-warn hide" id="cfg-warn"><b>Falta configurar.</b><br>Abra o arquivo <b>config.js</b> desta pasta e preencha a URL e a chave pública do Supabase (as mesmas do Retoma do PC). Veja o guia <b>supabase/LEIA-ME.md</b>.</div>
+
+<div class="sheet-ov" id="sheet" onclick="if(event.target===this)closeSheet()"><div class="sheet" id="sheet-box"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="money.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script>
+// ═══ Retoma no celular ════════════════════════════════════════════════
+// Mesmo banco do Retoma do PC (Supabase). As regras do banco (RLS) garantem que
+// cada pessoa só vê o que pode: vendedor os seus, gerente a loja toda.
+const CFG = window.RETOMA_CONFIG || {}
+const $ = id => document.getElementById(id)
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+const Money = window.Money
+let sb = null, me = null, ws = [], people = {}, prefs = {}, items = []
+let biz = localStorage.getItem('rt-biz') || 'all', owner = 'all', tab = 'hoje'
+const pad = n => String(n).padStart(2, '0')
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+const today = () => ymd(new Date())
+const nowIso = () => new Date().toISOString()
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2))
+
+function toast(html, undo) {
+  const t = $('toast'); t.innerHTML = html + (undo ? ' <a href="#" id="t-undo">Desfazer</a>' : '')
+  t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 5000)
+  if (undo) $('t-undo').onclick = e => { e.preventDefault(); t.classList.remove('show'); undo() }
+}
+function friendly(e) {
+  const m = String((e && e.message) || e || '').toLowerCase(), c = (e && e.code) || ''
+  if (c === 'invalid_credentials' || m.includes('invalid login')) return 'E-mail ou senha incorretos.'
+  if (c === 'email_not_confirmed' || m.includes('not confirmed')) return 'Confirme seu e-mail antes de entrar.'
+  if (c === 'user_already_exists' || m.includes('already registered')) return 'Já existe uma conta com esse e-mail.'
+  if (m.includes('rate limit') || (e && e.status === 429)) return 'Muitas tentativas. Aguarde alguns minutos.'
+  if (m.includes('expired') || m.includes('invalid')) return 'Código inválido ou vencido.'
+  if (m.includes('fetch') || m.includes('network')) return 'Sem conexão com a internet.'
+  return (e && e.message) || 'Algo deu errado.'
+}
+async function busy(btn, fn) {
+  const old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span>'
+  try { return await Promise.race([fn(), new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 15000))]) }
+  catch (e) { return { error: e.message === 'timeout' ? { message: 'O servidor demorou pra responder.' } : e } }
+  finally { btn.disabled = false; btn.innerHTML = old }
+}
+
+// ─── Entrada ───
+let authMode = 'login', authEmail = '', factorId = null
+function renderAuth(msg = '', ok = false) {
+  const n = msg ? `<div class="msg ${ok ? 'ok' : 'err'}">${msg}</div>` : ''
+  const g = `<button class="google" onclick="google()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continuar com Google</button><div class="or">ou</div>`
+  const V = {
+    login: `${g}<label class="lbl">E-mail</label><input class="inp" id="a-email" type="email" autocomplete="email" value="${esc(authEmail)}">
+      <label class="lbl">Senha</label><input class="inp" id="a-pass" type="password" autocomplete="current-password">${n}
+      <button class="btn" id="a-go" onclick="doLogin(this)">Entrar</button>
+      <div class="links"><a href="#" onclick="authMode='forgot';renderAuth();return false">Esqueci a senha</a><a href="#" onclick="authMode='signup';renderAuth();return false">Criar conta</a></div>`,
+    signup: `${g}<label class="lbl">Seu nome</label><input class="inp" id="a-name" autocomplete="name">
+      <label class="lbl">E-mail</label><input class="inp" id="a-email" type="email" value="${esc(authEmail)}">
+      <label class="lbl">Senha (8+ caracteres, letras e números)</label><input class="inp" id="a-pass" type="password" autocomplete="new-password">${n}
+      <button class="btn" onclick="doSignup(this)">Criar conta</button>
+      <div class="links"><a href="#" onclick="authMode='login';renderAuth();return false">Já tenho conta</a></div>`,
+    forgot: `<p class="sh-p">Vamos mandar um código de 6 números pro seu e-mail.</p><label class="lbl">E-mail</label><input class="inp" id="a-email" type="email" value="${esc(authEmail)}">${n}
+      <button class="btn" onclick="doForgot(this)">Mandar código</button><div class="links"><a href="#" onclick="authMode='login';renderAuth();return false">Voltar</a></div>`,
+    reset: `<p class="sh-p">Digite o código que chegou em <b>${esc(authEmail)}</b> e a nova senha.</p>
+      <label class="lbl">Código</label><input class="inp code" id="a-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+      <label class="lbl">Nova senha</label><input class="inp" id="a-pass" type="password" autocomplete="new-password">${n}
+      <button class="btn" onclick="doReset(this)">Salvar e entrar</button>`,
+    mfa: `<p class="sh-p">Digite o código do aplicativo autenticador.</p><input class="inp code" id="a-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">${n}
+      <button class="btn" onclick="doMfa(this)">Confirmar</button>`,
+    confirm: `<p class="sh-p">Mandamos um link de confirmação pra <b>${esc(authEmail)}</b>. Confirme e volte pra entrar.</p>${n}<button class="btn" onclick="authMode='login';renderAuth()">Entrar</button>`,
+  }
+  $('auth').innerHTML = V[authMode]
+}
+const v = id => ($(id) || {}).value || ''
+const goodPass = p => p.length >= 8 && /[a-z]/i.test(p) && /\d/.test(p)
+async function afterLogin() {
+  const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+    const { data } = await sb.auth.mfa.listFactors(); factorId = ((data && data.totp) || [])[0]?.id
+    if (factorId) { authMode = 'mfa'; renderAuth(); return }
+  }
+  start()
+}
+async function doLogin(b) {
+  authEmail = v('a-email').trim().toLowerCase()
+  if (!authEmail || !v('a-pass')) return renderAuth('Preencha e-mail e senha.')
+  const { error } = await busy(b, () => sb.auth.signInWithPassword({ email: authEmail, password: v('a-pass') }))
+  if (error) return renderAuth(esc(friendly(error)))
+  afterLogin()
+}
+async function doSignup(b) {
+  authEmail = v('a-email').trim().toLowerCase()
+  if (!v('a-name').trim()) return renderAuth('Digite seu nome.')
+  if (!goodPass(v('a-pass'))) return renderAuth('A senha precisa de 8+ caracteres, com letras e números.')
+  const { data, error } = await busy(b, () => sb.auth.signUp({ email: authEmail, password: v('a-pass'), options: { data: { name: v('a-name').trim() } } }))
+  if (error) return renderAuth(esc(friendly(error)))
+  if (!data.session) { authMode = 'confirm'; return renderAuth() }
+  start()
+}
+async function google() { await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.href.split('#')[0].split('?')[0] } }) }
+async function doForgot(b) {
+  authEmail = v('a-email').trim().toLowerCase() || authEmail
+  const { error } = await busy(b, () => sb.auth.resetPasswordForEmail(authEmail))
+  if (error) return renderAuth(esc(friendly(error)))
+  authMode = 'reset'; renderAuth('Se existir uma conta, o código chega em instantes.', true)
+}
+async function doReset(b) {
+  if (!goodPass(v('a-pass'))) return renderAuth('A senha precisa de 8+ caracteres, com letras e números.')
+  const r = await busy(b, () => sb.auth.verifyOtp({ email: authEmail, token: v('a-code').trim(), type: 'recovery' }))
+  if (r.error) return renderAuth(esc(friendly(r.error)))
+  const u = await sb.auth.updateUser({ password: v('a-pass') })
+  if (u.error) return renderAuth(esc(friendly(u.error)))
+  afterLogin()
+}
+async function doMfa(b) {
+  const { error } = await busy(b, () => sb.auth.mfa.challengeAndVerify({ factorId, code: v('a-code').trim() }))
+  if (error) return renderAuth(esc(friendly(error)))
+  start()
+}
+
+// ─── Dados ───
+async function start() {
+  const { data } = await sb.auth.getSession()
+  if (!data.session) { $('login').classList.remove('hide'); $('app').classList.add('hide'); renderAuth(); return }
+  me = data.session.user
+  $('login').classList.add('hide'); $('app').classList.remove('hide')
+  load()
+}
+async function load() {
+  $('btn-refresh').innerHTML = '<span class="spin"></span>'
+  try {
+    const [w, p, m, r] = await Promise.all([
+      sb.from('workspaces').select('*'),
+      sb.rpc('ws_people'),
+      sb.from('workspace_members').select('*').eq('user_id', me.id),
+      sb.from('retomas').select('*').eq('status', 'active'),
+    ])
+    for (const x of [w, p, m, r]) if (x.error) throw x.error
+    ws = (w.data || []).filter(x => !x.deleted_at)
+    people = {}; for (const x of p.data || []) (people[x.workspace_id] = people[x.workspace_id] || []).push({ id: x.user_id, role: x.role, name: x.display_name || x.email })
+    prefs = {}; for (const x of m.data || []) prefs[x.workspace_id] = x
+    items = (r.data || []).filter(x => !x.deleted_at)
+    try { localStorage.setItem('rt-cache', JSON.stringify({ ws, people, prefs, items })) } catch (e) {}
+    $('offline').classList.add('hide')
+  } catch (e) {
+    try { const c = JSON.parse(localStorage.getItem('rt-cache') || 'null'); if (c) ({ ws, people, prefs, items } = c) } catch (e2) {}
+    $('offline').classList.remove('hide')
+  }
+  $('btn-refresh').textContent = '↻'
+  if (biz !== 'all' && !ws.some(x => x.id === biz)) biz = 'all'
+  render()
+}
+const wsOf = id => ws.find(x => x.id === id)
+const roleIn = id => ((people[id] || []).find(p => p.id === me.id) || {}).role
+const isMgr = id => ['owner', 'manager'].includes(roleIn(id))
+const visibleWs = () => ws.filter(w => !(prefs[w.id] && prefs[w.id].archived))
+function teamWs() {
+  const id = biz !== 'all' ? biz : (visibleWs().length === 1 ? visibleWs()[0].id : null)
+  const w = id && wsOf(id)
+  return w && w.kind === 'store' && isMgr(id) ? id : null
+}
+function list() {
+  let l = biz === 'all' ? items.filter(x => visibleWs().some(w => w.id === x.workspace_id)) : items.filter(x => x.workspace_id === biz)
+  const tw = teamWs()
+  if (tw && owner !== 'all') l = l.filter(x => owner === 'none' ? !x.owner_id : owner === 'me' ? x.owner_id === me.id : x.owner_id === owner)
+  return l
+}
+const P = { alta: 0, media: 1, baixa: 2 }
+const val = x => Money.valueOf({ value: x.value === null ? undefined : Number(x.value), note: x.note, name: x.name })
+const fmtVal = n => Money.fmtMoney(n)
+function fieldsOf(x) {
+  const w = wsOf(x.workspace_id); if (!w || !x.fields) return ''
+  return (w.fields || []).filter(f => !f.off && f.onCard && f.type !== 'money' && x.fields[f.id] !== undefined && x.fields[f.id] !== '')
+    .map(f => `<span class="tag"><em>${esc(f.label)}</em> ${esc(f.type === 'number' ? Number(x.fields[f.id]).toLocaleString('pt-BR') : x.fields[f.id])}</span>`).join('')
+}
+function dayLabel(ds) {
+  const t = today(); if (ds === t) return 'hoje'
+  const d = new Date(ds + 'T12:00'), n = new Date(t + 'T12:00'), diff = Math.round((d - n) / 864e5)
+  if (diff === 1) return 'amanhã'; if (diff === -1) return 'ontem'
+  return d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }).replace('.', '')
+}
+function card(x) {
+  const late = x.date < today(), w = wsOf(x.workspace_id), v = val(x)
+  const multi = visibleWs().length > 1 && biz === 'all'
+  let own = ''
+  if (w && w.kind === 'store' && isMgr(w.id) && x.owner_id !== me.id) {
+    const p = (people[w.id] || []).find(p => p.id === x.owner_id)
+    own = x.owner_id ? `<span class="tag own">👤 ${esc(p ? p.name : 'vendedor')}</span>` : `<span class="tag none">Sem responsável</span>`
+  }
+  return `<div class="card ${late ? 'late' : ''}">
+    <div class="c-top"><span class="dot ${x.prio || 'media'}"></span><span class="c-name">${esc(x.name)}</span><span class="c-when ${late ? 'late' : ''}">${dayLabel(x.date)}${x.time ? ' ' + esc(x.time) : ''}</span></div>
+    ${x.note ? `<div class="c-meta">${esc(x.note)}</div>` : ''}
+    <div class="tags">${v ? `<span class="tag val">${fmtVal(v)}</span>` : ''}${multi && w ? `<span class="tag biz" style="--c:${w.color}">${esc(w.name)}</span>` : ''}${fieldsOf(x)}${own}${(x.snoozes || 0) >= 3 ? '<span class="tag">🧊 adiado ' + x.snoozes + 'x</span>' : ''}</div>
+    <div class="acts"><button class="act wpp" onclick="wpp('${esc(x.id)}')">WhatsApp</button><button class="act" onclick="openSnooze('${esc(x.id)}')">⏰ Adiar</button><button class="act" onclick="openDone('${esc(x.id)}')">✓ Feito</button></div>
+  </div>`
+}
+function render() {
+  // chips de negócio
+  const vw = visibleWs()
+  $('biz-chips').classList.toggle('hide', vw.length < 2)
+  $('biz-chips').innerHTML = [`<button class="chip ${biz === 'all' ? 'on' : ''}" onclick="setBiz('all')">Todos</button>`]
+    .concat(vw.map(w => `<button class="chip ${biz === w.id ? 'on' : ''}" style="--c:${w.color}" onclick="setBiz('${w.id}')"><i></i>${esc(w.name)}</button>`)).join('')
+  const tw = teamWs()
+  $('own-chips').classList.toggle('hide', !tw)
+  if (tw) {
+    const ps = (people[tw] || []).filter(p => p.id !== me.id), none = items.filter(x => x.workspace_id === tw && !x.owner_id).length
+    $('own-chips').innerHTML = [['all', 'Todos'], ['me', 'Eu'], ...ps.map(p => [p.id, p.name.split(' ')[0]])].map(([id, n]) => `<button class="chip ${owner === id ? 'on' : ''}" onclick="owner='${id}';render()">${esc(n)}</button>`).join('') + (none ? `<button class="chip warn ${owner === 'none' ? 'on' : ''}" onclick="owner='none';render()">Sem dono · ${none}</button>` : '')
+  }
+  const all = list(), t = today()
+  const late = all.filter(x => x.date < t), hoje = all.filter(x => x.date === t)
+  const sortF = (a, b) => (a.date || '').localeCompare(b.date || '') || (P[a.prio] ?? 1) - (P[b.prio] ?? 1) || (a.time || '').localeCompare(b.time || '')
+  const money = all.reduce((s, x) => s + (val(x) || 0), 0)
+  $('sum').innerHTML = `<div><b>${hoje.length}</b><small>pra hoje</small></div><div class="late"><b>${late.length}</b><small>atrasados</small></div>${money ? `<div class="money"><b>${fmtVal(money)}</b><small>em jogo</small></div>` : ''}`
+  $('q').classList.toggle('hide', tab !== 'busca')
+  let html = ''
+  if (tab === 'hoje') {
+    if (late.length) html += `<div class="sec late">Atrasados · ${late.length}</div>` + late.sort(sortF).map(card).join('')
+    html += `<div class="sec">Hoje · ${hoje.length}</div>` + (hoje.length ? hoje.sort(sortF).map(card).join('') : '<div class="empty"><b>🎉</b>Nada pra hoje</div>')
+  } else if (tab === 'semana') {
+    const end = new Date(); end.setDate(end.getDate() + 7)
+    const next = all.filter(x => x.date > t && x.date <= ymd(end)).sort(sortF)
+    let last = ''
+    for (const x of next) { if (x.date !== last) { html += `<div class="sec">${dayLabel(x.date)}</div>`; last = x.date } html += card(x) }
+    if (!next.length) html = '<div class="empty"><b>📅</b>Nada marcado nos próximos 7 dias</div>'
+  } else {
+    const q = v('q').trim().toLowerCase()
+    const r = q ? all.filter(x => [x.name, x.phone, x.note].some(s => String(s || '').toLowerCase().includes(q))) : []
+    html = q ? (r.length ? r.sort(sortF).map(card).join('') : '<div class="empty">Nada encontrado</div>') : '<div class="empty"><b>🔍</b>Busque por nome, telefone ou assunto</div>'
+  }
+  $('list').innerHTML = html
+}
+function setBiz(id) { biz = id; owner = 'all'; localStorage.setItem('rt-biz', id); render() }
+function setTab(t) { tab = t; document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.t === t)); render(); if (t === 'busca') setTimeout(() => $('q').focus(), 50) }
+
+// ─── Ações ───
+async function save(x, patch) {
+  const before = { ...x }
+  Object.assign(x, patch, { client_updated_at: nowIso() })
+  render()
+  const { error } = await sb.from('retomas').update({ ...patch, client_updated_at: x.client_updated_at }).eq('id', x.id)
+  if (error) { Object.assign(x, before); render(); toast('⚠️ ' + esc(friendly(error))); return null }
+  return before
+}
+function wpp(id) {
+  const x = items.find(i => i.id === id); if (!x) return
+  let n = String(x.phone || '').replace(/\D/g, ''); if (n.length <= 11) n = '55' + n
+  const p = prefs[x.workspace_id], w = wsOf(x.workspace_id)
+  if (visibleWs().length > 1 && p && p.wa_phone && sessionStorage.getItem('rt-wpp') !== x.workspace_id) {
+    toast(`📱 Abrindo pela <b>${esc(w.name)}</b> · confira o número ${esc(p.wa_phone)}`)
+    sessionStorage.setItem('rt-wpp', x.workspace_id)
+  }
+  location.href = 'https://wa.me/' + n
+}
+function sheet(html) { $('sheet-box').innerHTML = '<div class="grab"></div>' + html; $('sheet').classList.add('open') }
+function closeSheet() { $('sheet').classList.remove('open') }
+function openSnooze(id) {
+  const x = items.find(i => i.id === id)
+  const opts = Money.snoozeOptions(new Date())
+  const load = ds => items.filter(i => i.date === ds && i.id !== id).length
+  sheet(`<div class="sh-t">Adiar ${esc(x.name)}</div>` + opts.map(o => `<button class="big-opt" onclick="doSnooze('${esc(id)}','${o.date}')">${esc(o.label)} <small>${esc(o.sub || '')}${load(o.date) ? ' · ' + load(o.date) + ' marcados' : ''}</small></button>`).join('') +
+    `<label class="lbl">Outra data</label><input class="inp" type="date" id="sn-date" min="${today()}" onchange="doSnooze('${esc(id)}', this.value)">`)
+}
+async function doSnooze(id, date) {
+  const x = items.find(i => i.id === id); if (!x || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return
+  closeSheet()
+  const b = await save(x, { date, snoozes: (x.snoozes || 0) + 1 })
+  if (b) toast(`⏰ ${esc(x.name)} → ${dayLabel(date)}`, () => save(x, { date: b.date, snoozes: b.snoozes || 0 }))
+}
+function openDone(id) {
+  const x = items.find(i => i.id === id)
+  sheet(`<div class="sh-t">${esc(x.name)}</div><p class="sh-p">Fechou negócio?</p>
+    <button class="btn" onclick="doDone('${esc(id)}','won')">💰 Fechou</button>
+    <button class="btn ghost" onclick="doDone('${esc(id)}','lost')">Não fechou</button>
+    <button class="btn ghost" onclick="doDone('${esc(id)}',null)">Só concluir</button>`)
+}
+async function doDone(id, outcome) {
+  const x = items.find(i => i.id === id); if (!x) return
+  closeSheet()
+  const b = await save(x, { status: 'done', done_at: nowIso(), outcome })
+  if (!b) return
+  items = items.filter(i => i.id !== id); render()
+  toast(`✓ ${esc(x.name)} concluído`, async () => { items.push(x); await save(x, { status: 'active', done_at: null, outcome: null }) })
+}
+
+// ─── Novo retoma ───
+let draft = {}
+function openForm() {
+  const vw = visibleWs(); if (!vw.length) { toast('Crie um negócio no Retoma do PC primeiro'); return }
+  const last = localStorage.getItem('rt-last-biz')
+  draft = { biz: biz !== 'all' ? biz : (vw.some(w => w.id === last) ? last : vw[0].id), prio: 'media', fields: {}, owner: me.id }
+  renderForm()
+}
+function renderForm() {
+  const vw = visibleWs(), w = wsOf(draft.biz)
+  const tm = w && w.kind === 'store' && isMgr(w.id) && (people[w.id] || []).length > 1
+  const keep = {}; for (const id of ['f-name', 'f-phone', 'f-note', 'f-date', 'f-time']) if ($(id)) keep[id] = $(id).value
+  sheet(`<div class="sh-t">Novo retoma</div>
+    ${vw.length > 1 ? `<label class="lbl">Negócio</label><div class="opts">${vw.map(x => `<button class="opt ${x.id === draft.biz ? 'on' : ''}" style="--c:${x.color}" onclick="draft.biz='${x.id}';draft.fields={};renderForm()"><i></i>${esc(x.name)}</button>`).join('')}</div>` : ''}
+    <label class="lbl">Nome</label><input class="inp" id="f-name" autocomplete="off">
+    <label class="lbl">WhatsApp</label><input class="inp" id="f-phone" type="tel" inputmode="tel" placeholder="11999999999">
+    <label class="lbl">Assunto</label><input class="inp" id="f-note" placeholder="Orçamento, retorno…">
+    ${(w && w.fields || []).filter(f => !f.off).map(f => f.type === 'choice'
+      ? `<label class="lbl">${esc(f.label)}</label><div class="opts">${f.options.map(o => `<button class="opt ${draft.fields[f.id] === o ? 'on' : ''}" onclick="draft.fields['${f.id}']=draft.fields['${f.id}']===this.textContent?'':this.textContent;renderForm()">${esc(o)}</button>`).join('')}</div>`
+      : `<label class="lbl">${esc(f.label)}</label><input class="inp" inputmode="${f.type === 'text' ? 'text' : 'decimal'}" value="${esc(draft.fields[f.id] || '')}" oninput="draft.fields['${f.id}']=this.value">`).join('')}
+    <div class="row2"><div><label class="lbl">Data</label><input class="inp" id="f-date" type="date" value="${today()}"></div><div><label class="lbl">Hora</label><input class="inp" id="f-time" type="time" value="09:00"></div></div>
+    <label class="lbl">Prioridade</label><div class="opts">${[['alta', '🔴 Alta'], ['media', '🟡 Média'], ['baixa', '🟢 Baixa']].map(([k, l]) => `<button class="opt ${draft.prio === k ? 'on' : ''}" onclick="draft.prio='${k}';renderForm()">${l}</button>`).join('')}</div>
+    ${tm ? `<label class="lbl">Responsável</label><select class="inp" onchange="draft.owner=this.value">${(people[w.id] || []).map(p => `<option value="${p.id}" ${draft.owner === p.id ? 'selected' : ''}>${esc(p.name)}${p.id === me.id ? ' (eu)' : ''}</option>`).join('')}<option value="" ${draft.owner === '' ? 'selected' : ''}>Sem responsável</option></select>` : ''}
+    <button class="btn" id="f-go" onclick="saveForm(this)">Salvar</button>`)
+  for (const [id, vv] of Object.entries(keep)) if ($(id)) $(id).value = vv
+}
+function parseNum(s) { let t = String(s).toLowerCase().replace(/r\$|\s/g, ''); let m = 1; if (/(k|mil)$/.test(t)) { m = 1000; t = t.replace(/(k|mil)$/, '') } if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(t)) t = t.replace(/\./g, '').replace(',', '.'); else t = t.replace(',', '.'); const n = Number(t); return isFinite(n) && t !== '' ? n * m : NaN }
+async function saveForm(btn) {
+  const name = v('f-name').trim(), phone = v('f-phone').trim(), date = v('f-date')
+  if (!name || !phone || !date) { toast('Preencha nome, WhatsApp e data'); return }
+  const w = wsOf(draft.biz), fields = {}; let value = null
+  for (const f of (w.fields || []).filter(f => !f.off)) {
+    let x = draft.fields[f.id]; if (x === undefined || x === '') continue
+    if (f.type === 'number' || f.type === 'money') { x = parseNum(x); if (!isFinite(x)) continue }
+    fields[f.id] = x; if (f.type === 'money' && x > 0) value = x
+  }
+  const t = nowIso()
+  const row = { id: uid(), workspace_id: draft.biz, owner_id: draft.owner || null, created_by: me.id, name, phone, note: v('f-note').trim(), date, time: v('f-time'), prio: draft.prio,
+    fields: Object.keys(fields).length ? fields : null, value, status: 'active', client_created_at: t, client_updated_at: t }
+  const { error } = await busy(btn, () => sb.from('retomas').insert(row))
+  if (error) { toast('⚠️ ' + esc(friendly(error))); return }
+  localStorage.setItem('rt-last-biz', draft.biz)
+  items.push(row); closeSheet(); render(); toast('✓ Salvo')
+}
+
+// ─── Conta ───
+function openAccount() {
+  sheet(`<div class="sh-t">${esc((me.user_metadata && me.user_metadata.name) || me.email)}</div><p class="sh-p">${esc(me.email)}</p>
+    <p class="sh-p">Configurações, equipe e campos ficam no Retoma do PC. Aqui no celular você vê, cadastra, adia e conclui.</p>
+    <button class="btn ghost" onclick="closeSheet();load()">↻ Atualizar</button>
+    <button class="btn danger" onclick="logout()">Sair</button>`)
+}
+async function logout() { await sb.auth.signOut(); localStorage.removeItem('rt-cache'); location.reload() }
+
+// ─── Início ───
+document.addEventListener('visibilitychange', () => { if (!document.hidden && me) load() })
+window.addEventListener('online', () => me && load())
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {})
+if (!CFG.supabaseUrl || !CFG.supabaseAnonKey || !window.supabase) { $('cfg-warn').classList.remove('hide') }
+else {
+  sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } })
+  sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') location.reload() })
+  start()
+}
+</script>
+</body>
+</html>
