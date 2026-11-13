@@ -712,13 +712,13 @@
       "degree": 29
     },
     {
-      "id": "src_app_rendersettings",
-      "label": "renderSettings()",
+      "id": "src_app_render",
+      "label": "render()",
       "degree": 27
     },
     {
-      "id": "src_app_render",
-      "label": "render()",
+      "id": "src_app_rendersettings",
+      "label": "renderSettings()",
       "degree": 27
     },
     {
@@ -727,13 +727,13 @@
       "degree": 25
     },
     {
-      "id": "src_app_renderpane",
-      "label": "renderPane()",
+      "id": "src_sync_sync",
+      "label": "Sync",
       "degree": 24
     },
     {
-      "id": "src_sync_sync",
-      "label": "Sync",
+      "id": "src_app_renderpane",
+      "label": "renderPane()",
       "degree": 24
     },
     {
@@ -755,6 +755,17 @@
   "surprises": [
     {
       "source": "device()",
+      "target": "Sync",
+      "source_files": [
+        "test/sync.test.js",
+        "src/sync.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "device()",
       "target": "normalize()",
       "source_files": [
         "test/sync.test.js",
@@ -765,15 +776,26 @@
       "why": "connects across different repos/directories"
     },
     {
-      "source": "device()",
-      "target": "Sync",
+      "source": "boot()",
+      "target": "load()",
       "source_files": [
-        "test/sync.test.js",
-        "src/sync.js"
+        "src/main.js",
+        "src/config.js"
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",
-      "why": "connects across different repos/directories"
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "getMeta()",
+      "target": "load()",
+      "source_files": [
+        "src/main.js",
+        "src/config.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
     },
     {
       "source": "initCloud()",
@@ -785,32 +807,43 @@
       "confidence": "EXTRACTED",
       "relation": "calls",
       "why": "bridges separate communities"
-    },
-    {
-      "source": "getClient()",
-      "target": "load()",
-      "source_files": [
-        "src/cloud.js",
-        "src/config.js"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "bridges separate communities"
-    },
-    {
-      "source": "acceptMine()",
-      "target": "getClient()",
-      "source_files": [
-        "src/main.js",
-        "src/cloud.js"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "peripheral node `acceptMine()` unexpectedly reaches hub `getClient()`"
     }
   ],
-  "tokens": {
-    "input": 0,
-    "output": 0
-  }
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `electron` connect `Community 21` to `Community 1`, `Community 18`, `Community 3`, `Community 7`?",
+      "why": "High betweenness centrality (0.053) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 2 inferred relationships involving `render()` (e.g. with `restoreDone()` and `setBizFilter()`) actually correct?",
+      "why": "`render()` has 2 INFERRED edges - model-reasoned connections that need verification."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.07172995780590717 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `Sync` connect `Community 2` to `Community 1`?",
+      "why": "High betweenness centrality (0.030) - this node is a cross-community bridge."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.0687719298245614 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `build` connect `Community 16` to `Community 23`, `Community 7`?",
+      "why": "High betweenness centrality (0.026) - this node is a cross-community bridge."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.05745814307458143 - nodes in this community are weakly interconnected."
+    }
+  ]
 }
