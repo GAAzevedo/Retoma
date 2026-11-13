@@ -26,7 +26,9 @@ Histórico completo e próximos passos: doc `ESTADO-RETOMA.md` no Projeto "App R
 
 ## Mapa do código (Graphify)
 - Antes de abrir arquivos de código, leia `graphify-out/GRAPH_REPORT.md` para saber onde está cada coisa, e só depois abra os arquivos necessários.
-- Antes de cada commit que mude código, atualize o mapa (`pip install graphifyy` se não tiver, depois `graphify update .`) e inclua `graphify-out/` no commit. Se ele recusar por ter menos itens que antes (código apagado), use `graphify update . --force`.
+- Antes de cada commit que mude código, atualize o mapa (`pip install "graphifyy[sql]"` se não tiver — com `[sql]`, senão o banco some do mapa —, depois `graphify update .`) e inclua `graphify-out/` no commit. Se ele recusar por ter menos itens que antes (código apagado), use `graphify update . --force`.
+- Os nomes dos grupos ficam em `graphify-out/.graphify_labels.json` (em português, 2 a 5 palavras). Se aparecer grupo novo como "Community N", dê um nome, apague o `.graphify_labels.json.sig` e rode `graphify cluster-only .`.
+- Só o mapa vai pro GitHub (`GRAPH_REPORT.md`, `graph.json`, `graph.html`, nomes e análise). Cache, manifest e caminhos locais estão no `.gitignore`.
 - Não usar `graphify hook install` nem `graphify claude install`: o mapa é atualizado só por quem faz o commit.
 
 ## Mapa rápido (`src/`)
