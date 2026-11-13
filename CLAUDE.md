@@ -24,6 +24,11 @@ Histórico completo e próximos passos: doc `ESTADO-RETOMA.md` no Projeto "App R
 - Ao entregar: dizer em poucas linhas o que mudou e se ele precisa rodar `npm install` (só quando mudar dependência no `package.json`). Senão é só bandeja → Sair e `npm start`.
 - Ao fechar uma entrega grande, atualizar o ESTADO-RETOMA.md do Projeto.
 
+## Mapa do código (Graphify)
+- Antes de abrir arquivos de código, leia `graphify-out/GRAPH_REPORT.md` para saber onde está cada coisa, e só depois abra os arquivos necessários.
+- Antes de cada commit que mude código, atualize o mapa (`pip install graphifyy` se não tiver, depois `graphify update .`) e inclua `graphify-out/` no commit. Se ele recusar por ter menos itens que antes (código apagado), use `graphify update . --force`.
+- Não usar `graphify hook install` nem `graphify claude install`: o mapa é atualizado só por quem faz o commit.
+
 ## Mapa rápido (`src/`)
 | Arquivo | Função |
 |---|---|
