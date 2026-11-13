@@ -1,4 +1,4 @@
-# Retoma 1.2.0
+# Retoma 1.3.0
 
 **Nenhum cliente esquecido.** App de follow-up para Windows, com versão celular, conta, sincronização e equipes.
 
@@ -7,7 +7,7 @@
 # PowerShell como administrador, nesta pasta
 npm install
 npm start          # testar
-npm run build      # instalador em dist\Retoma-Setup-1.2.0.exe
+npm run build      # instalador em dist\Retoma-Setup-1.3.0.exe
 ```
 Antes de abrir esta versão, feche a anterior pelo ícone da bandeja → **Sair**.
 
